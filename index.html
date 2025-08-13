@@ -1,39 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Astral Client</title>
+<meta charset="UTF-8">
+<title>Astral Client Demo</title>
 <style>
-:root{
-  --bg:#2a0040;
-  --purple:#9b5cff;
-  --purple-2:#7b3cff;
-  --light-blue:#53b7e8;
-  --white:#ffffff;
-  --black:#000000;
+  body {
+    background-color: #2b2b2b;
+    font-family: 'Minecraftia', monospace;
+    color: white;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+  }
+  @font-face {
+    font-family: 'Minecraftia';
+    src: url('https://cdn.jsdelivr.net/gh/IdreesInc/Minecraft-Font@master/Minecraftia.ttf') format('truetype');
+  }
+  .title {
+    font-size: 32px;
+    padding: 10px;
+    background: linear-gradient(to right, black, purple);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+  }
+  .module-list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+  }
+  .module {
+    width: 250px;
+    padding: 8px;
+    margin: 4px 0;
+    background-color: #555;
+    border: 2px solid #222;
+    cursor: pointer;
+    position: relative;
+  }
+  .module.active {
+    background-color: #2ecc71;
+  }
+  .tooltip {
+    display: none;
+    position: absolute;
+    left: 260px;
+    top: 0;
+    background: rgba(0,0,0,0.8);
+    padding: 5px;
+    border: 1px solid #aaa;
+    font-size: 12px;
+    width: 200px;
+    z-index: 10;
+  }
+  .settings-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #333;
+    padding: 15px;
+    border: 3px solid #222;
+    display: none;
+    z-index: 100;
+  }
+  .option {
+    margin: 8px 0;
+  }
+  button {
+    background-color: #444;
+    color: white;
+    border: 1px solid #222;
+    padding: 4px 8px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<div class="title">Astral</div>
+<div class="module-list" id="moduleList">
+</div>
+
+<div class="settings-panel" id="settingsPanel">
+  <div id="settingsDesc"></div>
+  <div class="option">
+    <label><input type="checkbox" id="tracers"> Tracers</label>
+  </div>
+  <div class="option">
+    <label>Keybind: <input type="text" id="keybind" maxlength="1"></label>
+  </div>
+  <div class="option">
+    <label><input type="checkbox" id="toggleOnRelease"> Toggle bind on release</label>
+  </div>
+  <div class="option">
+    <label><input type="checkbox" id="chatFeedback" checked> Chat Feedback</label>
+  </div>
+  <button onclick="closeSettings()">Close</button>
+</div>
+
+<script>
+const modules = [
+  { name: "Cluster ESP", desc: "Highlights full grown amethyst clusters" },
+  { name: "Deepslate ESP", desc: "Highlights rotated deepslate" },
+  { name: "Deepslate ESP+", desc: "Highlights deepslate above Y=8" },
+  { name: "Auto RTP", desc: "Automatically RTP's to 175k+" },
+  { name: "Drip Stone ESP", desc: "Highlights downward growing dripstone (min. length 4-8 blocks)" },
+  { name: "Cobbled Deepslate ESP", desc: "Highlights Cobbled Deepslate between Y=0 and Y=10" },
+  { name: "Bee Nest ESP", desc: "Highlights stage 5 Bee nests" },
+  { name: "Stone ESP", desc: "Highlights Stone below Y=8" },
+  { name: "Pillager ESP", desc: "Highlights nearby Pillagers" },
+  { name: "Llama ESP", desc: "Highlights nearby Wandering Trader Llamas" }
+];
+
+const moduleList = document.getElementById('moduleList');
+let tooltipTimer;
+let settingsOpen = false;
+
+modules.forEach(mod => {
+  const div = document.createElement('div');
+  div.className = 'module';
+  div.textContent = mod.name;
+
+  const tooltip = document.createElement('div');
+  tooltip.className = 'tooltip';
+  tooltip.textContent = mod.desc;
+  div.appendChild(tooltip);
+
+  div.addEventListener('mouseenter', () => {
+    tooltipTimer = setTimeout(() => tooltip.style.display = 'block', 1000);
+  });
+  div.addEventListener('mouseleave', () => {
+    clearTimeout(tooltipTimer);
+    tooltip.style.display = 'none';
+  });
+
+  div.addEventListener('click', e => {
+    if (e.button === 0) {
+      div.classList.toggle('active');
+    }
+  });
+
+  div.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    openSettings(mod.desc);
+  });
+
+  moduleList.appendChild(div);
+});
+
+function openSettings(desc) {
+  settingsOpen = true;
+  document.getElementById('settingsPanel').style.display = 'block';
+  document.getElementById('settingsDesc').textContent = desc;
+  document.getElementById('moduleList').style.display = 'none';
 }
 
-/* Base */
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{
-  font-family: Arial, Helvetica, sans-serif;
-  background: var(--bg);
-  color: var(--white);
-  overflow-x:hidden;
+function closeSettings() {
+  settingsOpen = false;
+  document.getElementById('settingsPanel').style.display = 'none';
+  document.getElementById('moduleList').style.display = 'flex';
 }
 
-/* Glow around edges */
-body::before{
-  content:"";
-  position:fixed; inset:0;
-  pointer-events:none;
-  box-shadow: inset 0 0 160px 60px rgba(255,255,255,.25);
-  z-index:1;
-}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && settingsOpen) {
+    closeSettings();
+  }
+});
+</script>
 
-/* Meteor field */
+</body>
+</html>
 .sky{
   position:fixed; inset:0;
   overflow:hidden;
